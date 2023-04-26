@@ -1,0 +1,163 @@
+<!doctype html>
+<html>
+  <head>
+    <title> RSS Viewer </title>
+    <script src="https://code.jquery.com/jquery-3.6.3.min.js" integrity="sha256-pvPw+upLPUjgMXY0G+8O0xUf+/Im1MZjXxxgOcBQBXU=" crossorigin="anonymous"></script>
+    <script src='./asyncReq.js'></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.20.1/moment.min.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+    <style>
+      .mouse #itemList button:hover,
+      .touch #itemList button:active{
+        background-color: azure;
+      }
+      body{
+        margin:0;
+      }
+      #itemList{
+        position:absolute;
+        width: 30vw;
+        background: lightgray;
+        max-height: 100vh;
+        overflow-y: auto;
+      }
+      #itemList button
+      {
+          width: 100%;
+          height: 100px;
+          padding: 0;
+      }
+      #itemList button img{
+        float: left;
+      }
+      #itemList button h1{
+          text-overflow: ellipsis;
+          word-break: break-word;
+          overflow: hidden;
+          height: 30px;
+          white-space: nowrap;
+          text-align:left;
+          padding-left: 10px;
+      }
+      #itemList button h2{
+          text-overflow: ellipsis;
+          word-break: break-word;
+          overflow: hidden;
+          height: 30px;
+          white-space: nowrap;
+          text-align:left;
+          padding-left: 10px;
+      }
+      #itemDetails{
+        width: 70%;
+        position: absolute;
+        right: 0;
+        max-height: 100vh;
+        overflow: auto;
+        text-align:center;
+      }
+      #itemList button.selected{
+        background: lightblue;
+      }
+      #backButton{
+        display: none;
+      }
+      @media screen and (max-width: 600px) { /* for "small" screens */
+        #itemList{
+          width: 100vw;
+        }
+        #itemDetails{
+          width: 100vw;
+          position: relative;
+        }
+        body.details #backButton{
+          display: block;
+          position: absolute;
+          top: 0;
+          left: 0;
+          width: auto;
+          height: 50px;
+          background: lightgray;
+          border: none;
+          font-size: 20px;
+        }
+
+        #itemDetails{
+          display: none;
+        }
+        #itemList{
+          display: block;
+        }
+        body.details #itemList{
+          display: none;
+        }    
+
+        body.details #itemDetails{
+          display: block;
+        }
+
+      }
+    </style>
+    <script>
+      function detectDevice(){
+        var ua = navigator.userAgent;
+        if (ua.indexOf("iPhone") > -1 || ua.indexOf("iPad") > -1 || ua.indexOf("Android") > -1){
+          return "touch";
+        }
+        return "mouse";
+      }
+
+      var jsonObj;
+      function start(){
+        document.getElementsByTagName("html")[0].className = detectDevice();
+        var hash = location.hash.replace("#","")
+        var url = "./makeHTTPReq?url=" + hash;
+        loadURL(url, function(resData){
+           jsonObj = JSON.parse(resData);
+           generateMarkup();
+        });
+      }
+
+      function generateMarkup()
+      {
+        var list = jsonObj.feed.results;
+        var markup = "";
+        for (var i = 0; i < list.length; i++){
+          markup += "<button onclick='itemClicked("+ i +")'>" +
+              "<img src='"+ list[i].artworkUrl100 +"'>" +
+              "<h1>" + list[i].name + "</h1>" + 
+              "<h2>" + list[i].artistName + "</h2>" + 
+            "</button>";
+        }
+        console.log(markup);
+        document.getElementById("itemList").innerHTML  = markup;
+      }
+
+      function itemClicked(index){
+        var item = jsonObj.feed.results[index];
+          markup = 
+              "<img width=300 src='"+ item.artworkUrl100 +"'>" +
+              "<a target='_blank' href='"+ item.url + "'><h1>" + item.name + "</h1></a>" + 
+              "<a target='_blank' href='"+ item.artistUrl +"'><h2>" + item.artistName + "</h2></a>" +
+              "<p><i>"+ moment(item.releaseDate).format('MMMM Do YYYY'); + "</i></p>"
+          document.getElementById("itemDetails").innerHTML  = markup;
+          document.getElementsByTagName("body")[0].className = "details";
+          $("#itemList button").removeClass("selected");
+          $("#itemList button:nth-of-type(" + (index + 1) + ")").addClass("selected");
+      }
+      function backClicked(){
+        document.getElementsByTagName("body")[0].className = "";
+        setTimeout(function(){
+          $("#itemList button").removeClass("selected");
+        }, 500);
+        document.getElementById("itemDetails").innerHTML  = "";
+      }
+
+    </script>
+  </head>
+  <body onload='start()'>
+    <div id='itemList'> </div>
+    <div id='itemDetails'> </div>
+    <button id="backButton" onclick="backClicked()">Back</button>
+   </body>
+</html>

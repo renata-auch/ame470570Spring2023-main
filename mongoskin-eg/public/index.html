@@ -1,0 +1,71 @@
+<!doctype html>
+<html>
+  <head>
+    <title> AJAX Example </title>
+    <script src='./asyncReq.js'></script>
+    <script src="https://code.jquery.com/jquery-3.6.3.min.js" integrity="sha256-pvPw+upLPUjgMXY0G+8O0xUf+/Im1MZjXxxgOcBQBXU=" crossorigin="anonymous"></script>
+    <script>
+      function doMath(){
+        var op = document.getElementById("operator").value;
+        var a = document.getElementById("valA").value;
+        var b = document.getElementById("valB").value;
+        var url = "./" + op + "?a=" + a + "&b=" + b;
+        loadURL(url, function(resData){
+           document.getElementById("soln").innerHTML  = resData;
+           populateHistory();
+        });
+      }
+      function populateHistory(){
+        loadURL("./history", function(resData){
+          var items = JSON.parse(resData);
+          var markup = "";
+          for(var i=0; i<items.length; i++){
+            markup += "<li>" + JSON.stringify(items[i]) + "<a href='javascript:deleteItem(\"" + items[i]._id + "\", " + i + ")'>Delete</a>" + "</li>";
+          }
+          document.getElementById("history").innerHTML = markup;
+        });
+      }
+
+      function deleteItem(id, index){
+        var x = confirm("Are you sure you want to delete this item? (y/n)");
+        if(x){
+          // complete this function
+          var url = "./delete?id=" + id;
+          loadURL(url, function(resData){
+            if(resData == "Deleted"){
+              //alert("Item deleted");
+              //populateHistory();
+              $("#history li:nth-of-type(" + (index+1) + ")").remove()
+            }
+            else{
+              alert("Something went wrong");
+            }
+          });
+        }
+        else{
+          alert("Item not deleted");
+        }
+
+      }
+    </script>
+  </head>
+  <body onload="populateHistory()">
+    <h1> Simple AJAX Math Operators </h1>
+    <input type='number' id='valA'>
+    <select id='operator'>
+      <option value='add'>+</option>
+      <option value='sub'>-</option>
+      <option value='mul'>X</option>
+      <option value='div'>/</option>
+      <option value='pow'>^</option>
+      <option value='mod'>%</option>
+    </select>
+    <input type='number' id='valB'>
+
+    <button onclick='doMath()'> Calculate </button>
+    <h2 id='soln'></h2>
+
+    <ol id="history"></ol>
+
+  </body>
+</html>
